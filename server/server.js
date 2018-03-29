@@ -1,3 +1,5 @@
+require('./config/config');
+
 // lib Imprts
 const _ = require('lodash');
 const express = require('express');
@@ -12,7 +14,7 @@ var {User} = require('./modles/user');
 var app = express();
 app.use(bodyParser.json());
 
-var port = process.env.PORT || 3000;
+var port = process.env.PORT;
 
 app.post('/todos', (req, res) => {
   console.log(req.body);
