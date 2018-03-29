@@ -11,7 +11,9 @@ const todos = [{
   text: 'first test todo'
 }, {
   _id: new ObjectID(),
-  text: 'Second test todo'
+  text: 'Second test todo',
+  completed: true,
+  completedAt: 333
 }]
 
 beforeEach((done) => {
@@ -130,5 +132,62 @@ describe('Delete /todo/:id', () => {
       .delete(`/todos/123`)
       .expect(404)
       .end(done);
+  });
+});
+
+describe('PATCH /todos/:id', ()=> {
+
+  it('Should update the todo', (done) => {
+    var text = "I am in moca for test";
+    request(app)
+      .patch(`/todos/${todos[0]._id.toHexString()}`)
+      .send({
+        text,
+        completed: true
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completed).toBe(true);
+        expect(res.body.todo.completedAt).toBeA('number');
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        Todo.findById(todos[0]._id.toHexString()).then((todo) => {
+          expect(todo.text).toBe(text);
+          expect(todo.completed).toBe(true);
+          expect(todo.completedAt).toBeA('number');
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('Should clear compleatedAt when todo is not completed', (done) => {
+    var text = "I am in moca for test";
+    request(app)
+      .patch(`/todos/${todos[1]._id.toHexString()}`)
+      .send({
+        text,
+        completed: false
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.completedAt).toNotExist();
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        Todo.findById(todos[1]._id.toHexString()).then((todo) => {
+          expect(todo.text).toBe(text);
+          expect(todo.completed).toBe(false);
+          expect(todo.completedAt).toNotExist();
+          done();
+        }).catch((e) => done(e));
+      });
   });
 });
