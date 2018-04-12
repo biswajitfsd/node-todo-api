@@ -4,23 +4,11 @@ const {ObjectID} = require('mongodb');
 
 var {app} = require('./../server');
 var {Todo} = require('./../modles/todo');
-// var {User} = require('./../modles/user');
+var {User} = require('./../modles/user');
+const {populateTodos, todos, users, populateUser} = require('./seed/seed');
 
-const todos = [{
-  _id: new ObjectID(),
-  text: 'first test todo'
-}, {
-  _id: new ObjectID(),
-  text: 'Second test todo',
-  completed: true,
-  completedAt: 333
-}]
-
-beforeEach((done) => {
-  Todo.remove({}).then(() => {
-    Todo.insertMany(todos);
-  }).then(() => done());
-});
+beforeEach(populateUser);
+beforeEach(populateTodos);
 
 
 describe('POST /todos' , () => {
@@ -189,5 +177,77 @@ describe('PATCH /todos/:id', ()=> {
           done();
         }).catch((e) => done(e));
       });
+  });
+});
+
+describe('GET /users/me', () => {
+  it('Should return user if authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+        expect(res.body.email).toBe(users[0].email);
+      })
+      .end(done);
+  });
+  it('Should return 401 if not authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  });
+});
+describe('POST /users', () => {
+  it('Should signup a authenticated user', (done) => {
+    var usera = {
+      email: 'biswajit@website.co',
+      password: '123456789'
+    };
+    request(app)
+      .post('/users')
+      .send(usera)
+      .expect(200)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toExist();
+        expect(res.body._id).toExist();
+        expect(res.body.email).toBe(usera.email);
+      })
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        User.findOne({email: usera.email}).then((user) => {
+          expect(user).toExist();
+          expect(user.password).toNotBe(usera.password);
+          done();
+        });
+      });
+  });
+  it('Should return validation errors if request invalid', (done) => {
+    var usera = {
+      email: 'biswajit@website.coddddd',
+      password: '12349'
+    };
+    request(app)
+      .post('/users')
+      .send(usera)
+      .expect(400)
+      .end(done);
+  });
+  it('Should not create if email already used', (done) => {
+    var usera = {
+      email: 'bjipt@webe.co',
+      password: '123456789'
+    };
+    request(app)
+      .post('/users')
+      .send(usera)
+      .expect(400)
+      .end(done);
   });
 });

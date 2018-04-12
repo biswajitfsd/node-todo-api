@@ -75,7 +75,7 @@ UserSchema.statics.findByToken = function (token) {
     'tokens.access': 'auth'
   });
 };
-  
+
 UserSchema.pre('save', function(next) {
   var User = this;
   if (User.isModified('password')) {
