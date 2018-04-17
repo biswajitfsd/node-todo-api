@@ -4,22 +4,6 @@ const jwt = require('jsonwebtoken');
 var {Todo} = require('./../../modles/todo');
 var {User} = require('./../../modles/user');
 
-const todos = [{
-  _id: new ObjectID(),
-  text: 'first test todo'
-}, {
-  _id: new ObjectID(),
-  text: 'Second test todo',
-  completed: true,
-  completedAt: 333
-}];
-
-const populateTodos = (done) => {
-  Todo.remove({}).then(() => {
-    Todo.insertMany(todos);
-  }).then(() => done());
-};
-
 const userOneid = new ObjectID();
 const userTwoid = new ObjectID();
 
@@ -34,9 +18,30 @@ const users = [{
 }, {
   _id: userTwoid,
   email: "bjipit@webe.co",
-  password: "Biswaku"
+  password: "Biswaku",
+  tokens: [{
+    access: 'auth',
+    token: jwt.sign({_id: userTwoid, access: 'auth'}, 'abc123').toString()
+  }]
 }];
 
+const todos = [{
+  _id: new ObjectID(),
+  text: 'first test todo',
+  _creator: userOneid
+}, {
+  _id: new ObjectID(),
+  text: 'Second test todo',
+  completed: true,
+  completedAt: 333,
+  _creator: userTwoid
+}];
+
+const populateTodos = (done) => {
+  Todo.remove({}).then(() => {
+    Todo.insertMany(todos);
+  }).then(() => done());
+};
 
 const populateUser = (done) => {
   User.remove({}).then(() => {
