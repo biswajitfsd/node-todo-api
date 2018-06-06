@@ -5,6 +5,7 @@ const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const quickemailverification = require('quickemailverification').client('71b1f275b8c406910f7ea8fc76f16de79bd1d0ba011b79449b2a4be8bf1f').quickemailverification();
 
 // local imports
 var {mongoose} = require('./db/mongoose');
@@ -16,6 +17,19 @@ var app = express();
 app.use(bodyParser.json());
 
 var port = process.env.PORT;
+
+// app.use(express.static(publicPath));
+
+// Email validation
+app.post('/email-varify', (req, res) => {  
+  console.log("email-varify");
+  console.log(req.body);
+  quickemailverification.verify( req.body.email, function (err, response) {
+    // Print response object
+    console.log(response);
+    res.status(200).send(response.body);
+  });
+})
 
 app.post('/todos', authenticate, (req, res) => {
   // console.log(req.body);
