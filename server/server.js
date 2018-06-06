@@ -21,13 +21,22 @@ var port = process.env.PORT;
 // app.use(express.static(publicPath));
 
 // Email validation
-app.post('/email-varify', (req, res) => {  
+app.get('/email-varify/:email', (req, res) => {  
   console.log("email-varify");
-  console.log(req.body);
-  quickemailverification.verify( req.body.email, function (err, response) {
+  console.log(req.params.email);
+  quickemailverification.verify( req.params.email, function (err, response) {
+    res.setHeader('X-Frame-Options', 'ALLOWALL');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     // Print response object
     console.log(response);
-    res.status(200).send(response.body);
+    if (response.body.safe_to_send === "true") {
+      res.status(200).send(response.body);
+    } else {
+      res.status(400).send(response.body);
+    }
+    
   });
 })
 
